@@ -30,7 +30,7 @@
                 width: 60%;
             }
         }
-        .button, #winsize {
+        .center, #winsize {
             display: block;
             margin: 1em auto;
             width: max-content;
@@ -40,10 +40,24 @@
             height: 100%;
             image-rendering: crisp-edges;
         }
+        #debuginfo {
+            z-index: 10;
+            position: absolute;
+            top: 1em;
+            left: 1em;
+            background-color: white;
+            color: black;
+            font-family: monospace;
+            padding: 0.1em;
+        }
     </style>
 </head>
 <body>
-    <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
+    <div id="fullscreen">
+        <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
+        <div id="debuginfo" style="display: none;"></div>
+    </div>
+    
     <div id="main">
         <h1>What are you doing, step-pixel?</h1>
         <p>
@@ -57,14 +71,22 @@
             or more if you'd like. Exit by pressing ESC or
             pressing the back button on mobile devices.
         </p>
-        <button id="start" class="button">Start</button>
+        <div class="center">
+            <button id="start" class="button">Start</button>
+
+            <input type="checkbox" id="debugenabled">
+            <label for="debugenabled">show performance info</label>
+        </div>
         <pre id="winsize">width: 0 height: 0</pre>
     </div>
+
     <script>
     const winsizeInfo = document.querySelector("#winsize");
     const canvas = document.querySelector("#canvas");
     const ctx = canvas.getContext("2d");
     const mainDiv = document.querySelector("#main");
+    const debugInfo = document.querySelector("#debuginfo");
+    const debugEnabled = document.querySelector("#debugenabled");
     let drawTimer = null;
 
     const pixels = [
@@ -91,6 +113,7 @@
     window.addEventListener("resize", resize); resize();
 
     function draw() {
+        const startTime = performance.now();
         const width = canvas.width;
         const height = canvas.height;
         for(let x = 0; x <= width; x++) {
@@ -99,14 +122,19 @@
                 ctx.putImageData(px, x, y);
             }
         }
+        if(debugEnabled.checked) {
+            const endTime = performance.now();
+            debugInfo.textContent = `${width}x${height} ${endTime-startTime}ms`;
+        }
     }
 
     async function start() {
         console.debug("start");
         mainDiv.style.display = "none";
         canvas.style.display = "block";
-        await canvas.requestFullscreen({navigationUI: "hide"});
+        await document.querySelector("#fullscreen").requestFullscreen({navigationUI: "hide"});
         console.debug("fullscreened");
+        if(debugEnabled.checked) debugInfo.style.display = "block";
         console.time("draw");
         draw();
         console.timeEnd("draw");
@@ -122,6 +150,7 @@
             clearInterval(drawTimer);
             drawTimer = null;
         }
+        if(debugEnabled.checked) debugInfo.style.display = "none";
     }
     document.addEventListener("fullscreenchange", (key) => {
         if(!document.fullscreenElement) stop();
