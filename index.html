@@ -52,6 +52,7 @@
     <script>
     const winsizeInfo = document.querySelector("#winsize");
     const canvas = document.querySelector("#canvas");
+    const ctx = canvas.getContext("2d");
     const mainDiv = document.querySelector("#main");
 
     function resize() {
@@ -63,12 +64,37 @@
     }
     window.addEventListener("resize", resize); resize();
 
+    function draw() {
+        const px = ctx.createImageData(1, 1);
+        const pxdata = px.data;
+        pxdata[3] = 255;
+        const width = canvas.width;
+        const height = canvas.height;
+        for(let x = 0; x <= width; x++) {
+            for(let y = 0; y <= height; y++) {
+                const randomValue = Math.random() * 10;
+                if (randomValue > 8) {
+                    pxdata[0] = pxdata[1] = pxdata[2] = 255;
+                } else {
+                    pxdata[0] = randomValue < 3.3 ? 255 : 0;
+                    pxdata[1] = randomValue > 3.3 && randomValue < 6.6 ? 255 : 0;
+                    pxdata[2] = randomValue > 6.6 ? 255 : 0;
+                }
+                
+                ctx.putImageData(px, x, y);
+            }
+        }
+    }
+
     async function start() {
         console.debug("start");
         mainDiv.style.display = "none";
         canvas.style.display = "block";
         await canvas.requestFullscreen({navigationUI: "hide"});
         console.debug("fullscreened");
+        console.time("draw");
+        draw();
+        console.timeEnd("draw");
     }
     document.querySelector("#start").addEventListener("click", start);
 
