@@ -67,6 +67,20 @@
     const mainDiv = document.querySelector("#main");
     let drawTimer = null;
 
+    const pixels = [
+        [255,   0,   0],
+        [  0, 255,   0],
+        [  0,   0, 255],
+        [  0,   0,   0],
+        [255, 255, 255]
+    ].map(val => {
+        const px = ctx.createImageData(1, 1);
+        px.data[3] = 255;
+        val.forEach((v, i) => px.data[i] = v);
+        return px;
+    });
+    console.debug("generated pixels: ", pixels);
+
     function resize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -77,24 +91,11 @@
     window.addEventListener("resize", resize); resize();
 
     function draw() {
-        const px = ctx.createImageData(1, 1);
-        const pxdata = px.data;
-        pxdata[3] = 255;
         const width = canvas.width;
         const height = canvas.height;
         for(let x = 0; x <= width; x++) {
             for(let y = 0; y <= height; y++) {
-                const randomValue = Math.random() * 10;
-                if (randomValue > 8) {
-                    pxdata[0] = pxdata[1] = pxdata[2] = 255;
-                } else if(randomValue < 0.5) {
-                    pxdata[0] = pxdata[1] = pxdata[2] = 0;
-                } else {
-                    pxdata[0] = randomValue < 3.3 ? 255 : 0;
-                    pxdata[1] = randomValue > 3.3 && randomValue < 6.6 ? 255 : 0;
-                    pxdata[2] = randomValue > 6.6 ? 255 : 0;
-                }
-                
+                const px = pixels[Math.floor(Math.random() * 5)];
                 ctx.putImageData(px, x, y);
             }
         }
@@ -109,7 +110,7 @@
         console.time("draw");
         draw();
         console.timeEnd("draw");
-        drawTimer = setInterval(draw, 200);
+        drawTimer = setInterval(draw, 100);
     }
     document.querySelector("#start").addEventListener("click", start);
 
