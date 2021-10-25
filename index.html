@@ -11,8 +11,9 @@
             color: white;
             font-family: "Fira Sans", Arial, Helvetica, sans-serif;
             width: 100%;
-            height: 100wh;
+            height: 100%;
             margin: 0;
+            overflow: hidden;
         }
         #main {
             width: 50%;
@@ -24,9 +25,14 @@
             margin: 1em auto;
             width: max-content;
         }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
+    <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
     <div id="main">
         <h1>What are you doing, step-pixel?</h1>
         <p>
@@ -37,19 +43,43 @@
         <p>
             Click start below to start the thing,
             you can set a timer on another device to 10 minutes,
-            or more if you'd like. Also fullscreen this by pressing F11.
+            or more if you'd like. Exit by pressing ESC or
+            pressing the back button on mobile devices.
         </p>
         <button id="start" class="button">Start</button>
         <pre id="winsize">width: 0 height: 0</pre>
     </div>
     <script>
     const winsizeInfo = document.querySelector("#winsize");
+    const canvas = document.querySelector("#canvas");
+    const mainDiv = document.querySelector("#main");
+
     function resize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
         winsizeInfo.textContent = `width: ${width} height: ${height}`;
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
     }
     window.addEventListener("resize", resize); resize();
+
+    async function start() {
+        console.debug("start");
+        mainDiv.style.display = "none";
+        canvas.style.display = "block";
+        await canvas.requestFullscreen({navigationUI: "hide"});
+        console.debug("fullscreened");
+    }
+    document.querySelector("#start").addEventListener("click", start);
+
+    function stop() {
+        console.debug("stop");
+        mainDiv.style.display = "block";
+        canvas.style.display = "none";
+    }
+    document.addEventListener("fullscreenchange", (key) => {
+        if(!document.fullscreenElement) stop();
+    });
     </script>
 </body>
 </html>
