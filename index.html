@@ -5,28 +5,67 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What are you doing, step-pixel?</title>
+
+    <meta property="og:title" content="What are you doing, step-pixel?">
+    <meta property="og:description" content="a stuck pixel fixer thing">
+    <meta name="description" content="a stuck pixel fixer thing">
+    <meta property="og:site_name" content="chfour.github.io/waydsp/">
+    <meta name="theme-color" content="#896ac1">
+    <meta name="keywords" content="stuck pixel,stuck pixel fix,stuck pixel fixer,stuck,pixel">
+
     <style>
         body {
             background-color: #2b2b2b;
             color: white;
             font-family: "Fira Sans", Arial, Helvetica, sans-serif;
             width: 100%;
-            height: 100wh;
+            height: 100%;
             margin: 0;
+            overflow: hidden;
         }
         #main {
-            width: 50%;
+            width: 90%;
             height: 50%;
             margin: auto;
         }
-        .button, #winsize {
+        @media (min-width: 720px) {
+            #main {
+                width: 70%;
+            }
+        }
+        @media (min-width: 1200px) {
+            #main {
+                width: 60%;
+            }
+        }
+        .center, #winsize {
             display: block;
             margin: 1em auto;
             width: max-content;
         }
+        #canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: crisp-edges;
+        }
+        #debuginfo {
+            z-index: 10;
+            position: absolute;
+            top: 1em;
+            left: 1em;
+            background-color: white;
+            color: black;
+            font-family: monospace;
+            padding: 0.1em;
+        }
     </style>
 </head>
 <body>
+    <div id="fullscreen">
+        <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
+        <div id="debuginfo" style="display: none;"></div>
+    </div>
+    
     <div id="main">
         <h1>What are you doing, step-pixel?</h1>
         <p>
@@ -37,19 +76,93 @@
         <p>
             Click start below to start the thing,
             you can set a timer on another device to 10 minutes,
-            or more if you'd like. Also fullscreen this by pressing F11.
+            or more if you'd like. Exit by pressing ESC or
+            pressing the back button on mobile devices.
         </p>
-        <button id="start" class="button">Start</button>
+        <div class="center">
+            <button id="start" class="button">Start</button>
+
+            <input type="checkbox" id="debugenabled">
+            <label for="debugenabled">show performance info</label>
+        </div>
         <pre id="winsize">width: 0 height: 0</pre>
     </div>
+
     <script>
     const winsizeInfo = document.querySelector("#winsize");
+    const canvas = document.querySelector("#canvas");
+    const ctx = canvas.getContext("2d");
+    const mainDiv = document.querySelector("#main");
+    const debugInfo = document.querySelector("#debuginfo");
+    const debugEnabled = document.querySelector("#debugenabled");
+    let drawTimer = null;
+
+    const pixels = [
+        [255,   0,   0],
+        [  0, 255,   0],
+        [  0,   0, 255],
+        [  0,   0,   0],
+        [255, 255, 255]
+    ].map(val => {
+        const px = ctx.createImageData(1, 1);
+        px.data[3] = 255;
+        val.forEach((v, i) => px.data[i] = v);
+        return px;
+    });
+    console.debug("generated pixels: ", pixels);
+
     function resize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
         winsizeInfo.textContent = `width: ${width} height: ${height}`;
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
     }
     window.addEventListener("resize", resize); resize();
+
+    function draw() {
+        const startTime = performance.now();
+        const width = canvas.width;
+        const height = canvas.height;
+        for(let x = 0; x <= width; x++) {
+            for(let y = 0; y <= height; y++) {
+                const px = pixels[Math.floor(Math.random() * 5)];
+                ctx.putImageData(px, x, y);
+            }
+        }
+        if(debugEnabled.checked) {
+            const endTime = performance.now();
+            debugInfo.textContent = `${width}x${height} ${endTime-startTime}ms`;
+        }
+    }
+
+    async function start() {
+        console.debug("start");
+        mainDiv.style.display = "none";
+        canvas.style.display = "block";
+        await document.querySelector("#fullscreen").requestFullscreen({navigationUI: "hide"});
+        console.debug("fullscreened");
+        if(debugEnabled.checked) debugInfo.style.display = "block";
+        console.time("draw");
+        draw();
+        console.timeEnd("draw");
+        drawTimer = setInterval(draw, 100);
+    }
+    document.querySelector("#start").addEventListener("click", start);
+
+    function stop() {
+        console.debug("stop");
+        mainDiv.style.display = "block";
+        canvas.style.display = "none";
+        if(drawTimer) {
+            clearInterval(drawTimer);
+            drawTimer = null;
+        }
+        if(debugEnabled.checked) debugInfo.style.display = "none";
+    }
+    document.addEventListener("fullscreenchange", (key) => {
+        if(!document.fullscreenElement) stop();
+    });
     </script>
 </body>
 </html>
