@@ -54,6 +54,7 @@
     const canvas = document.querySelector("#canvas");
     const ctx = canvas.getContext("2d");
     const mainDiv = document.querySelector("#main");
+    let drawTimer = null;
 
     function resize() {
         const width = window.innerWidth;
@@ -75,6 +76,8 @@
                 const randomValue = Math.random() * 10;
                 if (randomValue > 8) {
                     pxdata[0] = pxdata[1] = pxdata[2] = 255;
+                } else if(randomValue < 0.5) {
+                    pxdata[0] = pxdata[1] = pxdata[2] = 0;
                 } else {
                     pxdata[0] = randomValue < 3.3 ? 255 : 0;
                     pxdata[1] = randomValue > 3.3 && randomValue < 6.6 ? 255 : 0;
@@ -95,6 +98,7 @@
         console.time("draw");
         draw();
         console.timeEnd("draw");
+        drawTimer = setInterval(draw, 200);
     }
     document.querySelector("#start").addEventListener("click", start);
 
@@ -102,6 +106,10 @@
         console.debug("stop");
         mainDiv.style.display = "block";
         canvas.style.display = "none";
+        if(drawTimer) {
+            clearInterval(drawTimer);
+            drawTimer = null;
+        }
     }
     document.addEventListener("fullscreenchange", (key) => {
         if(!document.fullscreenElement) stop();
