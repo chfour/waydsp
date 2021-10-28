@@ -89,27 +89,27 @@
     </div>
 
     <script>
-    const winsizeInfo = document.querySelector("#winsize");
-    const canvas = document.querySelector("#canvas");
+    const winsizeInfo = document.getElementById("winsize");
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const mainDiv = document.querySelector("#main");
-    const debugInfo = document.querySelector("#debuginfo");
-    const debugEnabled = document.querySelector("#debugenabled");
+    const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const imageData = image.data;
+    for (let i = 3; i < imageData.length; i += 4) {
+        // set alpha to 0xff (opaque)
+        imageData[i] = 0xff;
+    }
+    const mainDiv = document.getElementById("main");
+    const debugInfo = document.getElementById("debuginfo");
+    const debugEnabled = document.getElementById("debugenabled");
     let drawTimer = null;
 
-    const pixels = [
+    const colors = [
         [255,   0,   0],
         [  0, 255,   0],
         [  0,   0, 255],
         [  0,   0,   0],
         [255, 255, 255]
-    ].map(val => {
-        const px = ctx.createImageData(1, 1);
-        px.data[3] = 255;
-        val.forEach((v, i) => px.data[i] = v);
-        return px;
-    });
-    console.debug("generated pixels: ", pixels);
+    ];
 
     function resize() {
         const width = window.innerWidth;
@@ -118,19 +118,21 @@
         canvas.setAttribute("width", width);
         canvas.setAttribute("height", height);
     }
-    window.addEventListener("resize", resize); resize();
+    window.addEventListener("resize", resize);
+    resize();
 
     function draw() {
         const startTime = performance.now();
         const width = canvas.width;
         const height = canvas.height;
-        for(let x = 0; x <= width; x++) {
-            for(let y = 0; y <= height; y++) {
-                const px = pixels[Math.floor(Math.random() * 5)];
-                ctx.putImageData(px, x, y);
-            }
+        for (let i = 0; i < imageData.length; i += 4) {
+            color = colors[Math.floor(Math.random()*5)];
+            imageData[i] = color[0];
+            imageData[i + 1] = color[1];
+            imageData[i + 2] = color[2];
         }
-        if(debugEnabled.checked) {
+        ctx.putImageData(image, 0, 0);
+        if (debugEnabled.checked) {
             const endTime = performance.now();
             debugInfo.textContent = `${width}x${height} ${endTime-startTime}ms`;
         }
@@ -142,7 +144,9 @@
         canvas.style.display = "block";
         await document.querySelector("#fullscreen").requestFullscreen({navigationUI: "hide"});
         console.debug("fullscreened");
-        if(debugEnabled.checked) debugInfo.style.display = "block";
+        if (debugEnabled.checked) {
+            debugInfo.style.display = "block";
+        }
         console.time("draw");
         draw();
         console.timeEnd("draw");
