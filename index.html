@@ -134,10 +134,12 @@
             imageData[i + 2] = color[2];
         }
         ctx.putImageData(image, 0, 0);
+        const endTime = performance.now();
+        const frameTime = (endTime-startTime);
         if (debugEnabled.checked) {
-            const endTime = performance.now();
-            debugInfo.textContent = `${width}x${height} ${(endTime-startTime).toFixed(1)}ms`;
+            debugInfo.textContent = `${width}x${height} ${frameTime.toFixed(1)}ms`;
         }
+        return frameTime;
     }
 
     async function start() {
@@ -149,10 +151,10 @@
         if (debugEnabled.checked) {
             debugInfo.style.display = "block";
         }
-        console.time("draw");
-        draw();
-        console.timeEnd("draw");
-        drawTimer = setInterval(draw, 100);
+
+        const timing = Math.round(draw());
+        console.debug(`draw() took ${timing}ms`);
+        drawTimer = setInterval(draw, timing);
     }
     document.querySelector("#start").addEventListener("click", start);
 
