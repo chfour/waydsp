@@ -92,12 +92,8 @@
     const winsizeInfo = document.getElementById("winsize");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const imageData = image.data;
-    for (let i = 3; i < imageData.length; i += 4) {
-        // set alpha to 0xff (opaque)
-        imageData[i] = 0xff;
-    }
+    let image;
+    let imageData;
     const mainDiv = document.getElementById("main");
     const debugInfo = document.getElementById("debuginfo");
     const debugEnabled = document.getElementById("debugenabled");
@@ -115,8 +111,14 @@
         const width = window.innerWidth;
         const height = window.innerHeight;
         winsizeInfo.textContent = `width: ${width} height: ${height}`;
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
+        canvas.width = width;
+        canvas.height = height;
+        image = ctx.getImageData(0, 0, width, height);
+        imageData = image.data;
+        for (let i = 3; i < imageData.length; i += 4) {
+            // set alpha to 0xff (opaque)
+            imageData[i] = 0xff;
+        }
     }
     window.addEventListener("resize", resize);
     resize();
