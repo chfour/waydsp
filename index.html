@@ -136,7 +136,7 @@
         ctx.putImageData(image, 0, 0);
         if (debugEnabled.checked) {
             const endTime = performance.now();
-            debugInfo.textContent = `${width}x${height} ${endTime-startTime}ms`;
+            debugInfo.textContent = `${width}x${height} ${(endTime-startTime).toFixed(1)}ms`;
         }
     }
 
